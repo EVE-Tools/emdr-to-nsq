@@ -1,0 +1,19 @@
+workspace:
+  base: /go
+  path: src/github.com/EVE-Tools/emdr-to-nsq
+
+pipeline:
+  build:
+    image: golang:alpine
+    commands:
+      - apk update
+      - apk add zeromq-dev git build-base
+      - go get ./...
+      - go build
+
+  docker:
+    image: plugins/docker
+    repo: evetools/emdr-to-nsq
+    tag:
+      - latest
+      - ${DRONE_BRANCH}
