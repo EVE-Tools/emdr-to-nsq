@@ -79,7 +79,7 @@ func connectToBolt() {
 		panic(err)
 	}
 
-	messageProcessing.Inititalize(db)
+	messageProcessing.Initialize(db)
 }
 
 // Connect to EMDR and start listening for messages

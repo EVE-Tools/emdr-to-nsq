@@ -15,11 +15,11 @@ import (
 
 var db *bolt.DB
 
-// Inititalize creates the hash cache
-func Inititalize(database *bolt.DB) {
+// Initialize creates the hash cache
+func Initialize(database *bolt.DB) {
 	db = database
 
-	// Inititalize buckets
+	// Initialize buckets
 	err := db.Update(func(tx *bolt.Tx) error {
 		tx.CreateBucketIfNotExists([]byte("rowsetHashes"))
 		return nil
