@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/zlib"
+	"runtime/debug"
 
 	"regexp"
 	"runtime"
@@ -175,6 +176,9 @@ func pushToOutbox(rowsets []emds.Rowset) error {
 
 		nsqUpstream <- json
 	}
+
+	// Don't block OS memory for that long due to a bigger message every now and then
+	debug.FreeOSMemory()
 
 	return nil
 }
