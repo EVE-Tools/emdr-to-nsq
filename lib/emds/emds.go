@@ -7,8 +7,12 @@
 package emds
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/buger/jsonparser"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 // Order stores information about a single order on the market including info from the rowset.
@@ -277,3 +281,94 @@ func ParseOrders(rows []byte, indices ColumnIndices, regionID int64, typeID int6
 
 	return orders, nil
 }
+
+// ConvertRange converts a string range returned by the API into an int for use in UUDIF
+func ConvertRange(rangeString string) (int64, error) {
+	switch rangeString {
+	case "station":
+		return -1, nil
+	case "solarsystem":
+		return 0, nil
+	case "region":
+		return 32767, nil
+	}
+
+	intRange, err := strconv.ParseInt(rangeString, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return intRange, nil
+}
+
+// RowsetsToUUDIF converts a list of rowsets to a UUDIF message
+func RowsetsToUUDIF(rowsets []Rowset, generatorName string, generatorVersion string) ([]byte, error) {
+	now := time.Now().Format(time.RFC3339)
+	out := jwriter.Writer{}
+
+	out.RawString("{\"resultType\":\"orders\",\"version\":\"0.1\",\"uploadKeys\":[{\"key\":\"e43\",\"name\":\"EMDR\"}],\"generator\":{\"name\":")
+	out.String(generatorName)
+	out.RawString(",\"version\":")
+	out.String(generatorVersion)
+	out.RawString("},\"columns\":[\"price\",\"volRemaining\",\"range\",\"orderID\",\"volEntered\",\"minVolume\",\"bid\",\"issueDate\",\"duration\",\"stationID\",\"solarSystemID\"],\"currentTime\":")
+	out.String(now)
+	out.RawString(",\"rowsets\":[")
+
+	for rowsetIndex, rowset := range rowsets {
+
+		out.RawString("{\"generatedAt\":")
+		out.String(rowset.GeneratedAt)
+		out.RawString(",\"regionID\":")
+		out.Int64(rowset.RegionID)
+		out.RawString(",\"typeID\":")
+		out.Int64(rowset.TypeID)
+		out.RawString(",\"rows\":[")
+
+		for rowIndex, row := range rowset.Rows {
+			out.RawByte('[')
+			out.Float32(float32(row.Price))
+			out.RawByte(',')
+			out.Int64(row.VolRemaining)
+			out.RawByte(',')
+			out.Int64(row.OrderRange)
+			out.RawByte(',')
+			out.Int64(row.OrderID)
+			out.RawByte(',')
+			out.Int64(row.VolEntered)
+			out.RawByte(',')
+			out.Int64(row.MinVolume)
+			out.RawByte(',')
+			out.Bool(row.Bid)
+			out.RawByte(',')
+			out.String(row.IssueDate)
+			out.RawByte(',')
+			out.Int64(row.Duration)
+			out.RawByte(',')
+			out.Int64(row.StationID)
+			out.RawByte(',')
+			out.Int64(row.SolarSystemID)
+			out.RawByte(']')
+
+			if rowIndex != (len(rowset.Rows) - 1) {
+				out.RawByte(',')
+			}
+		}
+
+		out.RawString("]}")
+
+		if rowsetIndex != (len(rowsets) - 1) {
+			out.RawByte(',')
+		}
+	}
+
+	out.RawString("]}")
+
+	return out.Buffer.BuildBytes(), out.Error
+}
+
+// ByOrderID sorts orders by order ID
+type ByOrderID []Order
+
+func (o ByOrderID) Len() int           { return len(o) }
+func (o ByOrderID) Swap(i, j int)      { o[i], o[j] = o[j], o[i] }
+func (o ByOrderID) Less(i, j int) bool { return o[i].OrderID < o[j].OrderID }
