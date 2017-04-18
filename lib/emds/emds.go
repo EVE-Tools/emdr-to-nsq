@@ -7,7 +7,7 @@
 package emds
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/buger/jsonparser"
 )
 
@@ -57,19 +57,19 @@ func ParseUUDIF(message []byte) ([]Rowset, error) {
 
 	indices, err := GetColumnIndices(message)
 	if err != nil {
-		log.Errorf("Error extracting columns: %s", err.Error())
+		logrus.WithError(err).Error("Error extracting columns.")
 		return rowsets, err
 	}
 
 	rawRowsets, err = ExtractRawRowsets(message)
 	if err != nil {
-		log.Errorf("Error extracting raw rowsets: %s", err.Error())
+		logrus.WithError(err).Error("Error extracting raw rowsets.")
 		return rowsets, err
 	}
 
 	rowsets, err = ParseRawRowsets(rawRowsets, indices)
 	if err != nil {
-		log.Errorf("Error parsing rowsets: %s", err.Error())
+		logrus.WithError(err).Error("Error parsing rowsets.")
 		return rowsets, err
 	}
 
@@ -128,31 +128,31 @@ func ExtractRawRowsets(message []byte) ([]RawRowset, error) {
 
 	_, err := jsonparser.ArrayEach(message, func(rowset []byte, dataType jsonparser.ValueType, offset int, err error) {
 		if err != nil {
-			log.Warnf("Error splitting rowsets: %s", err.Error())
+			logrus.WithError(err).Warn("Error splitting rowsets.")
 			return
 		}
 
 		regionID, err := jsonparser.GetInt(rowset, "regionID")
 		if err != nil {
-			log.Warnf("Error parsing regionID: %s", err.Error())
+			logrus.WithError(err).Warn("Error parsing regionID.")
 			return
 		}
 
 		typeID, err := jsonparser.GetInt(rowset, "typeID")
 		if err != nil {
-			log.Warnf("Error parsing typeID: %s", err.Error())
+			logrus.WithError(err).Warn("Error parsing typeID.")
 			return
 		}
 
 		generatedAt, err := jsonparser.GetString(rowset, "generatedAt")
 		if err != nil {
-			log.Warnf("Error parsing generatedAt: %s", err.Error())
+			logrus.WithError(err).Warn("Error parsing generatedAt.")
 			return
 		}
 
 		rawOrders, _, _, err := jsonparser.Get(rowset, "rows")
 		if err != nil {
-			log.Warnf("Error extracting rawOrders: %s", err.Error())
+			logrus.WithError(err).Warn("Error extracting rawOrders.")
 			return
 		}
 
@@ -175,7 +175,7 @@ func ParseRawRowsets(rawRowsets []RawRowset, indices ColumnIndices) ([]Rowset, e
 		orders, err := ParseOrders(rowset.Rows, indices, rowset.RegionID, rowset.TypeID, rowset.GeneratedAt)
 
 		if err != nil {
-			log.Warnf("Error parsing orders: %s", err.Error())
+			logrus.WithError(err).Warn("Error parsing orders.")
 			return nil, err
 		}
 
@@ -204,43 +204,43 @@ func ParseOrders(rows []byte, indices ColumnIndices, regionID int64, typeID int6
 			case indices.price:
 				price, err := jsonparser.GetFloat(column)
 				if err != nil {
-					log.Warnf("Unable to parse price: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse price.")
 				}
 				order.Price = price
 			case indices.volRemaining:
 				volRemaining, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse volRemaining: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse volRemaining.")
 				}
 				order.VolRemaining = volRemaining
 			case indices.orderRange:
 				orderRange, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse orderRange: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse orderRange.")
 				}
 				order.OrderRange = orderRange
 			case indices.orderID:
 				orderID, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse orderID: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse orderID.")
 				}
 				order.OrderID = orderID
 			case indices.volEntered:
 				volEntered, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse volEntered: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse volEntered.")
 				}
 				order.VolEntered = volEntered
 			case indices.minVolume:
 				minVolume, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse minVolume: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse minVolume.")
 				}
 				order.MinVolume = minVolume
 			case indices.bid:
 				bid, err := jsonparser.GetBoolean(column)
 				if err != nil {
-					log.Warnf("Unable to parse bid: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse bid.")
 				}
 				order.Bid = bid
 			case indices.issueDate:
@@ -248,19 +248,19 @@ func ParseOrders(rows []byte, indices ColumnIndices, regionID int64, typeID int6
 			case indices.duration:
 				duration, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse duration: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse duration.")
 				}
 				order.Duration = duration
 			case indices.stationID:
 				stationID, err := jsonparser.GetInt(column)
 				if err != nil {
-					log.Warnf("Unable to parse stationID: %s", err.Error())
+					logrus.WithError(err).Warn("Unable to parse stationID.")
 				}
 				order.StationID = stationID
 			case indices.solarSystemID:
 				solarSystemID, err := jsonparser.GetInt(column)
 				if err != nil {
-					// log.Warnf("Unable to parse solarSystemID: %s", err.Error())
+					//.WithError(err) logrusWarnf("Unable to parse solarSystemID.")
 				}
 				order.SolarSystemID = solarSystemID
 			}

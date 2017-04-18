@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/EVE-Tools/emdr-to-nsq/lib/emds"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/buger/jsonparser"
 	"github.com/spaolacci/murmur3"
@@ -34,7 +34,7 @@ func FilterMessage(nameRegex *regexp.Regexp, versionRegex *regexp.Regexp, messag
 	// First, check message type and generator info
 	discard, err := discardMessage(message, nameRegex, versionRegex)
 	if err != nil {
-		log.Warnf("Got UUDIF uncompliant message: %s", err.Error())
+		logrus.WithError(err).Warn("Got UUDIF uncompliant message.")
 		return nil, err
 	}
 	if discard {
@@ -44,13 +44,13 @@ func FilterMessage(nameRegex *regexp.Regexp, versionRegex *regexp.Regexp, messag
 	// Second, parse region/type info and check if we've already seen these orders
 	rawRowsets, err := emds.ExtractRawRowsets(message)
 	if err != nil {
-		log.Warnf("Got UUDIF uncompliant message: %s", err.Error())
+		logrus.WithError(err).Warn("Got UUDIF uncompliant message.")
 		return nil, err
 	}
 
 	filteredRawRowsets, err := filterRowsets(rawRowsets)
 	if err != nil {
-		log.Warnf("Error filtering rowsets: %s", err.Error())
+		logrus.WithError(err).Warn("Error filtering rowsets.")
 		return nil, err
 	}
 
@@ -61,7 +61,7 @@ func FilterMessage(nameRegex *regexp.Regexp, versionRegex *regexp.Regexp, messag
 	// Finally, get column indices and parse orders
 	indices, err := emds.GetColumnIndices(message)
 	if err != nil {
-		log.Errorf("Error extracting columns: %s", err.Error())
+		logrus.WithError(err).Error("Error extracting columns.")
 		return nil, err
 	}
 
@@ -85,12 +85,12 @@ func filterRowsets(rowsets []emds.RawRowset) ([]emds.RawRowset, error) {
 				acceptedRowsets = append(acceptedRowsets, *rowset)
 			}
 		case err := <-failure:
-			log.Warn(err.Error())
+			logrus.WithError(err).Warn("Error filtering rowset.")
 		}
 	}
 
 	if len(rowsets) > 0 {
-		log.WithFields(log.Fields{
+		logrus.WithFields(logrus.Fields{
 			"regionID":   rowsets[0].RegionID,
 			"rowsets":    len(rowsets),
 			"newRowsets": len(acceptedRowsets),
@@ -128,7 +128,7 @@ func discardMessage(message []byte, nameRegex *regexp.Regexp, versionRegex *rege
 	if versionRegex != nil {
 		generatorVersion, err := jsonparser.GetString(message, "generator", "version")
 		if err != nil {
-			log.Warnf("Got UUDIF uncompliant message: %s", err.Error())
+			logrus.WithError(err).Warn("Got UUDIF uncompliant message.")
 			return true, err
 		}
 
@@ -144,7 +144,7 @@ func discardMessage(message []byte, nameRegex *regexp.Regexp, versionRegex *rege
 func discardRowsetAsync(success chan<- *emds.RawRowset, failure chan<- error, rowset *emds.RawRowset) {
 	discard, err := discardRowset(rowset)
 	if err != nil {
-		log.Warnf("Error parsing rowset: %s", err.Error())
+		logrus.WithError(err).Warn("Error parsing rowset.")
 		failure <- err
 		return
 	}

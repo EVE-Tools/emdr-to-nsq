@@ -127,7 +127,7 @@ func pushToNSQ(producer *nsq.Producer) {
 		message := <-nsqUpstream
 		err := producer.Publish("orders", message)
 		if err != nil {
-			log.Warnf("Could not publish message: ", err.Error())
+			log.WithError(err).Warn("Could not publish message.")
 		}
 	}
 }
@@ -140,7 +140,7 @@ func listenToEMDR(connection *zmq4.Socket) {
 	for {
 		message, err := connection.RecvBytes(0)
 		if err != nil {
-			log.Errorf("Recv error: %s", err.Error())
+			log.WithError(err).Error("Recv error.")
 			continue
 		}
 
@@ -152,7 +152,7 @@ func listenToEMDR(connection *zmq4.Socket) {
 func processMessage(rawMessage []byte) {
 	message, err := decompress(rawMessage)
 	if err != nil {
-		log.Warnf("Failed to decompress message: %s", err.Error())
+		log.WithError(err).Warn("Failed to decompress message.")
 		return
 	}
 
