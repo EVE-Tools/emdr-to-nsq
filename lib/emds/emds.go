@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/buger/jsonparser"
 	"github.com/mailru/easyjson/jwriter"
+	"github.com/sirupsen/logrus"
 )
 
 // Order stores information about a single order on the market including info from the rowset.

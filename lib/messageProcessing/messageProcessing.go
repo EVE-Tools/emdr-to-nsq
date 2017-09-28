@@ -7,9 +7,9 @@ import (
 	"regexp"
 
 	"github.com/EVE-Tools/emdr-to-nsq/lib/emds"
-	"github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/buger/jsonparser"
+	"github.com/sirupsen/logrus"
 	"github.com/spaolacci/murmur3"
 )
 

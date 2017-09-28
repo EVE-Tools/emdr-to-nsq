@@ -12,12 +12,12 @@ import (
 	"github.com/EVE-Tools/emdr-to-nsq/lib/emds"
 	"github.com/EVE-Tools/emdr-to-nsq/lib/messageProcessing"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/boltdb/bolt"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/mailru/easyjson"
 	"github.com/nsqio/go-nsq"
 	"github.com/pebbe/zmq4"
+	"github.com/sirupsen/logrus"
 )
 
 // Config holds the application's configuration info from the environment.
@@ -53,13 +53,13 @@ func main() {
 func loadConfig() {
 	envconfig.MustProcess("EMDR_TO_NSQ", &config)
 
-	logLevel, err := log.ParseLevel(config.LogLevel)
+	logLevel, err := logrus.ParseLevel(config.LogLevel)
 
 	if err != nil {
 		panic(err)
 	}
 
-	log.SetLevel(logLevel)
+	logrus.SetLevel(logLevel)
 
 	if config.GeneratorName != "" {
 		config.NameRegex = regexp.MustCompile(config.GeneratorName)
@@ -69,8 +69,8 @@ func loadConfig() {
 		config.VersionRegex = regexp.MustCompile(config.GeneratorVersion)
 	}
 
-	log.Info("\n    ________  _______  ____     __           _   _______ ____ \n   / ____/  |/  / __ \\/ __ \\   / /_____     / | / / ___// __ \\\n  / __/ / /|_/ / / / / /_/ /  / __/ __ \\   /  |/ /\\__ \\/ / / /\n / /___/ /  / / /_/ / _, _/  / /_/ /_/ /  / /|  /___/ / /_/ /\n/_____/_/  /_/_____/_/ |_|   \\__/\\____/  /_/ |_//____/\\___\\_\\ v0.1")
-	log.Debugf("Config: %q", config)
+	logrus.Info("\n    ________  _______  ____     __           _   _______ ____ \n   / ____/  |/  / __ \\/ __ \\   / /_____     / | / / ___// __ \\\n  / __/ / /|_/ / / / / /_/ /  / __/ __ \\   /  |/ /\\__ \\/ / / /\n / /___/ /  / / /_/ / _, _/  / /_/ /_/ /  / /|  /___/ / /_/ /\n/_____/_/  /_/_____/_/ |_|   \\__/\\____/  /_/ |_//____/\\___\\_\\ v0.1")
+	logrus.Debugf("Config: %q", config)
 }
 
 // Connect to local boltdb
@@ -128,7 +128,7 @@ func pushToNSQ(producer *nsq.Producer) {
 		message := <-nsqUpstream
 		err := producer.Publish("orders", message)
 		if err != nil {
-			log.WithError(err).Warn("Could not publish message.")
+			logrus.WithError(err).Warn("Could not publish message.")
 		}
 	}
 }
@@ -141,7 +141,7 @@ func listenToEMDR(connection *zmq4.Socket) {
 	for {
 		message, err := connection.RecvBytes(0)
 		if err != nil {
-			log.WithError(err).Error("Recv error.")
+			logrus.WithError(err).Error("Recv error.")
 			continue
 		}
 
@@ -153,7 +153,7 @@ func listenToEMDR(connection *zmq4.Socket) {
 func processMessage(rawMessage []byte) {
 	message, err := decompress(rawMessage)
 	if err != nil {
-		log.WithError(err).Warn("Failed to decompress message.")
+		logrus.WithError(err).Warn("Failed to decompress message.")
 		return
 	}
 
