@@ -1,5 +1,19 @@
+---
+
+<p align="center">⚠️⚠️⚠️⚠️⚠️</p>
+
+---
+
+**This project is not maintained anymore! Please check [here](https://github.com/EVE-Tools/element43) for alternatives. This repository is kept online for reference purposes only and can be taken offline/deleted any time.**
+
+---
+
+<p align="center">⚠️⚠️⚠️⚠️⚠️</p>
+
+---
+
 # EMDR to NSQ
-[![Build Status](https://drone.element-43.com/api/badges/EVE-Tools/emdr-to-nsq/status.svg)](https://drone.element-43.com/EVE-Tools/emdr-to-nsq) [![Go Report Card](https://goreportcard.com/badge/github.com/eve-tools/emdr-to-nsq)](https://goreportcard.com/report/github.com/eve-tools/emdr-to-nsq) [![Docker Image](https://images.microbadger.com/badges/image/evetools/emdr-to-nsq.svg)](https://microbadger.com/images/evetools/emdr-to-nsq)
+[![Go Report Card](https://goreportcard.com/badge/github.com/eve-tools/emdr-to-nsq)](https://goreportcard.com/report/github.com/eve-tools/emdr-to-nsq)
 
 This is a very simple service for [Element43](https://element-43.com) which just connects EMDR to our internal NSQ. It aims to be way faster than solutions we had before. For now it only supports `orders` messages from EMDR. EMDR's messages are split up by rowset before being submitted to the `orders` queue. Also, the order's attributes get mapped for easier access later on. Processing bulk updates of the market can result in lots of messages (read: multiple thousand) on NSQ as the original EMDR message contains many rowsets. Identical rowsets get deduplicated. This leads to way less messages on the queue as most of the time most of the market does not change between bulk updates from EMDR. In order for this feature to work properly it is best to only consume messages produced by a specific generator (you can set filters). Most generators have multiple instances running all over the world, so filtering for a specific one (say CRESTMarketTrawler v0.5.0) should not greatly reduce the reliability. Of course you can also choose to set no flters at all.
 
@@ -22,10 +36,6 @@ NSQ_URL | nsqd:4150 | Hostname/IP of the NSQD instance to connect to
 GENERATOR_NAME | none / match all | Only forward messages by a generator whose name matches this regex (see input example below). Remember to properly escape special characters in the regex.
 GENERATOR_VERSION | none / match all | Only forward messages by a generator whose version matches this regex (see input example below). Remember to properly escape special characters in the regex.
 CACHE_PATH | cache.db | Path to persistent deduplication cache
-
-## Todo
-- [ ] General code cleanup (this is my first Go project), add performance metrics
-- [ ] Tests would be nice
 
 ## Example Message
 
